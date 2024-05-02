@@ -1,95 +1,58 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import { getPokemonList } from "../backend/presentation/fetchers";
+import PokemonLogo from "../assets/pokemon_logo.png";
 
-export default function Home() {
+const POKEMON_PER_PAGE = 20;
+
+const renderPagination = () => {
+  const pageNumbers = [];
+  pageNumbers.push(<a href="/">First</a>);
+  for (let i = 1; i <= 160 / POKEMON_PER_PAGE; i++) {
+    pageNumbers.push(<a href={`/?p=${i}`}>{i}</a>);
+  }
+  pageNumbers.push(<a href="/?p=8">Last</a>);
+  return pageNumbers;
+};
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const pageNumber = parseInt(searchParams["p"] ? searchParams["p"][0] : "1");
+
+  const data = await getPokemonList({
+    page: pageNumber,
+    perPage: POKEMON_PER_PAGE,
+  });
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
+    <main className={styles.container}>
+      <Image src={PokemonLogo} alt="Pokemon" className={styles.logo} />
+      <div className={styles.main}>
+        {data.map((pokemon) => (
+          <div key={pokemon.id} className={styles.card}>
             <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+              src={pokemon.image}
+              alt={pokemon.name}
+              width={96}
+              height={96}
             />
-          </a>
-        </div>
+            <h2>{pokemon.name}</h2>
+            <p>{pokemon.description}</p>
+            <h3>Types:</h3>
+            <ul>
+              {pokemon.type.map((type) => (
+                <li key={type}>{type}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
+      <div className={styles.pagination}>{renderPagination()}</div>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      {/* {JSON.stringify(data)} */}
     </main>
   );
 }
